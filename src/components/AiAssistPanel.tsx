@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { AnimatedItem } from "@/components/AnimatedList";
 import { ProviderBadge, ProviderTechRow } from "@/components/ProviderBadge";
 import type {
   AiSuggestionResult,
@@ -287,38 +288,40 @@ export function AiAssistPanel({
                   <AlertCircle className="w-3.5 h-3.5" />
                   Missing info to confirm
                 </h4>
-                <ul className="rounded-lg border bg-card divide-y">
+                <div className="rounded-lg border bg-card divide-y overflow-hidden">
                   {result.missingInfo.map((m, i) => (
-                    <li key={i} className="px-3 py-2 text-sm">
-                      <p className="font-medium">{m.question}</p>
-                      {m.why && (
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {m.why}
-                        </p>
-                      )}
-                      <div className="mt-2 flex gap-2">
-                        <input
-                          type="text"
-                          value={missingAnswers[i] ?? ""}
-                          onChange={(e) =>
-                            handleMissingAnswerChange(i, e.target.value)
-                          }
-                          placeholder="Type answer to add into notes..."
-                          className="h-8 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
-                        />
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="h-8 px-2.5"
-                          onClick={() => handleInsertMissingAnswer(i, m.question)}
-                          disabled={!((missingAnswers[i] ?? "").trim())}
-                        >
-                          Add
-                        </Button>
+                    <AnimatedItem key={i} index={i} delay={i * 0.06}>
+                      <div className="px-3 py-2 text-sm">
+                        <p className="font-medium">{m.question}</p>
+                        {m.why && (
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {m.why}
+                          </p>
+                        )}
+                        <div className="mt-2 flex gap-2">
+                          <input
+                            type="text"
+                            value={missingAnswers[i] ?? ""}
+                            onChange={(e) =>
+                              handleMissingAnswerChange(i, e.target.value)
+                            }
+                            placeholder="Type answer to add into notes..."
+                            className="h-8 flex-1 rounded-lg border border-input bg-background px-2.5 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/40"
+                          />
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5"
+                            onClick={() => handleInsertMissingAnswer(i, m.question)}
+                            disabled={!((missingAnswers[i] ?? "").trim())}
+                          >
+                            Add
+                          </Button>
+                        </div>
                       </div>
-                    </li>
+                    </AnimatedItem>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
@@ -386,7 +389,13 @@ function SuggestionGroup<T>({
       {items.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">{empty}</p>
       ) : (
-        <div className="rounded-lg border bg-card divide-y">{items.map(renderItem)}</div>
+        <div className="rounded-lg border bg-card divide-y overflow-hidden">
+          {items.map((item, i) => (
+            <AnimatedItem key={i} index={i} delay={i * 0.06}>
+              {renderItem(item)}
+            </AnimatedItem>
+          ))}
+        </div>
       )}
     </div>
   );

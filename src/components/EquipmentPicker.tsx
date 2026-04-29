@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AnimatedList } from "@/components/AnimatedList";
 import { formatCurrency } from "@/lib/calculations";
 import type { Equipment, EstimateLineItem } from "@/lib/types";
 import { Plus, Check, Search, X } from "lucide-react";
@@ -107,75 +108,81 @@ export function EquipmentPicker({
       )}
 
       {/* Results */}
-      <div className="space-y-2">
-        {filtered.length === 0 && (
-          <div className="text-center py-8 space-y-1">
-            <p className="text-sm text-muted-foreground">
-              {isSearching
-                ? "No equipment matched your search."
-                : "No equipment in this category."}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {isSearching
-                ? "Try a different name, brand, or model number."
-                : "Try a different category above."}
-            </p>
-          </div>
-        )}
-        {filtered.map((item) => {
-          const qty = getQuantityInEstimate(item.id);
-          const added = justAdded.has(item.id);
-          return (
-            <div
-              key={item.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
-                qty > 0
-                  ? "bg-primary/5 border-primary/25 shadow-sm"
-                  : "bg-card border-border hover:border-primary/20"
-              }`}
-            >
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium leading-tight text-foreground">{item.name}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {item.brand} · {item.modelNumber}
-                </p>
-                <p className="text-sm font-bold text-primary mt-1">
-                  {formatCurrency(item.baseCost)}
-                </p>
-              </div>
+      {filtered.length === 0 ? (
+        <div className="text-center py-8 space-y-1">
+          <p className="text-sm text-muted-foreground">
+            {isSearching
+              ? "No equipment matched your search."
+              : "No equipment in this category."}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {isSearching
+              ? "Try a different name, brand, or model number."
+              : "Try a different category above."}
+          </p>
+        </div>
+      ) : (
+        <AnimatedList<Equipment>
+          items={filtered}
+          renderItem={(item) => {
+            const qty = getQuantityInEstimate(item.id);
+            const added = justAdded.has(item.id);
+            return (
+              <div
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  qty > 0
+                    ? "bg-primary/5 border-primary/25 shadow-sm"
+                    : "bg-card border-border hover:border-primary/20"
+                }`}
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium leading-tight text-foreground">{item.name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {item.brand} · {item.modelNumber}
+                  </p>
+                  <p className="text-sm font-bold text-primary mt-1">
+                    {formatCurrency(item.baseCost)}
+                  </p>
+                </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {qty > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
-                    <Check className="w-3 h-3" />
-                    {qty}
-                  </div>
-                )}
-                <Button
-                  size="sm"
-                  variant={added ? "secondary" : qty > 0 ? "outline" : "default"}
-                  onClick={() => handleAdd(item)}
-                  className={`h-10 px-3 min-w-[68px] transition-all ${
-                    !added && qty === 0 ? "bg-primary hover:bg-primary/90 shadow-sm" : ""
-                  }`}
-                >
-                  {added ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 mr-1 text-green-600" />
-                      <span className="text-green-600 font-medium">Added!</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-3.5 h-3.5 mr-1" />
-                      {qty > 0 ? "Add again" : "Add"}
-                    </>
+                <div className="flex items-center gap-2 shrink-0">
+                  {qty > 0 && (
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                      <Check className="w-3 h-3" />
+                      {qty}
+                    </div>
                   )}
-                </Button>
+                  <Button
+                    size="sm"
+                    variant={added ? "secondary" : qty > 0 ? "outline" : "default"}
+                    onClick={() => handleAdd(item)}
+                    className={`h-10 px-3 min-w-[68px] transition-all ${
+                      !added && qty === 0 ? "bg-primary hover:bg-primary/90 shadow-sm" : ""
+                    }`}
+                  >
+                    {added ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 mr-1 text-green-600" />
+                        <span className="text-green-600 font-medium">Added!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="w-3.5 h-3.5 mr-1" />
+                        {qty > 0 ? "Add again" : "Add"}
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          }}
+          showGradients={false}
+          enableArrowNavigation={false}
+          displayScrollbar={false}
+          maxHeight="none"
+          itemClassName="mb-2"
+        />
+      )}
     </div>
   );
 }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { CustomerCard } from "@/components/CustomerCard";
+import { AnimatedList } from "@/components/AnimatedList";
 import type { Customer } from "@/lib/types";
 import { Building2, Home, Search, Users } from "lucide-react";
 
@@ -126,11 +127,15 @@ export function CustomerSearch({ customers }: CustomerSearchProps) {
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
-          {filtered.map((customer) => (
-            <CustomerCard key={customer.id} customer={customer} />
-          ))}
-        </div>
+        <AnimatedList<Customer>
+          items={filtered}
+          renderItem={(customer) => <CustomerCard customer={customer} />}
+          showGradients={false}
+          enableArrowNavigation={false}
+          displayScrollbar={false}
+          maxHeight="none"
+          itemClassName="mb-2"
+        />
       )}
     </div>
   );

@@ -12,6 +12,7 @@ import {
 } from "@/lib/saved-estimates";
 import type { SavedEstimate } from "@/lib/types";
 import { formatCurrency } from "@/lib/calculations";
+import { AnimatedList } from "@/components/AnimatedList";
 import {
   ArrowLeft,
   PlusCircle,
@@ -182,12 +183,10 @@ export default function SavedEstimatesPage() {
           </div>
         )}
 
-        <div className="space-y-3">
-          {filtered.map((est) => (
-            <div
-              key={est.id}
-              className="bg-card rounded-xl border overflow-hidden shadow-sm hover:border-primary/20 transition-colors"
-            >
+        <AnimatedList<SavedEstimate>
+          items={filtered}
+          renderItem={(est) => (
+            <div className="bg-card rounded-xl border overflow-hidden shadow-sm hover:border-primary/20 transition-colors">
               {/* Header */}
               <div className="px-4 py-3 flex items-start justify-between gap-2 border-b bg-primary/5">
                 <div className="min-w-0 flex-1">
@@ -317,8 +316,13 @@ export default function SavedEstimatesPage() {
                 )}
               </div>
             </div>
-          ))}
-        </div>
+          )}
+          showGradients={false}
+          enableArrowNavigation={false}
+          displayScrollbar={false}
+          maxHeight="none"
+          itemClassName="mb-3"
+        />
 
         {estimates.length > 0 && (
           <p className="text-center text-xs text-muted-foreground py-4">

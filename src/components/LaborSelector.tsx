@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatCurrency, calcLaborRange } from "@/lib/calculations";
+import { AnimatedList } from "@/components/AnimatedList";
 import type { LaborRate } from "@/lib/types";
 import { Check, Clock, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -120,23 +121,22 @@ export function LaborSelector({
             </p>
           )}
 
-          <div className="grid grid-cols-1 gap-2">
-            {levelsForExpanded.map((rate) => {
+          <AnimatedList<LaborRate>
+            items={levelsForExpanded}
+            renderItem={(rate) => {
               const range = calcLaborRange(rate);
               const isSelected =
                 selected?.jobType === rate.jobType &&
                 selected?.level === rate.level;
               return (
                 <button
-                  key={`${rate.jobType}-${rate.level}`}
                   onClick={() => onSelect(rate)}
-                  className={`flex items-center gap-3 p-3 min-h-[44px] rounded-lg border text-left transition-colors ${
+                  className={`w-full flex items-center gap-3 p-3 min-h-[44px] rounded-lg border text-left transition-colors ${
                     isSelected
                       ? "bg-primary/10 border-primary"
                       : "bg-background border-border hover:bg-muted"
                   }`}
                 >
-                  {/* Checkmark column */}
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
                       isSelected
@@ -164,8 +164,13 @@ export function LaborSelector({
                   </div>
                 </button>
               );
-            })}
-          </div>
+            }}
+            showGradients={false}
+            enableArrowNavigation={false}
+            displayScrollbar={false}
+            maxHeight="none"
+            itemClassName="mb-2"
+          />
 
           {/* Formula hint */}
           <p className="text-xs text-muted-foreground pt-1">
