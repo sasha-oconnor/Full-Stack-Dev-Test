@@ -20,7 +20,6 @@ import {
   saveEstimate,
   updateEstimate,
   getSavedEstimate,
-  saveAsNewRevision,
   setEstimateStatus,
 } from "@/lib/saved-estimates";
 import type { Estimate, SavedEstimate } from "@/lib/types";
@@ -37,7 +36,6 @@ import {
   Clock,
   BookmarkCheck,
   Bookmark,
-  GitBranch,
   Link as LinkIcon,
   Send,
   Check,
@@ -56,8 +54,6 @@ export default function SummaryPage({
   const [loaded, setLoaded] = useState(false);
   const [savedRecord, setSavedRecord] = useState<SavedEstimate | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
-  const [showRevisionForm, setShowRevisionForm] = useState(false);
-  const [revisionNote, setRevisionNote] = useState("");
   const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
@@ -116,24 +112,6 @@ export default function SummaryPage({
     );
   }, [estimate, customer, savedRecord]);
 
-  const handleSaveNewRevision = useCallback(() => {
-    if (!estimate || !customer || !savedRecord) return;
-    const created = saveAsNewRevision(
-      savedRecord.id,
-      estimate,
-      customer.name,
-      revisionNote
-    );
-    if (created) {
-      setSavedRecord(created);
-      sessionStorage.setItem("currentEstimateId", created.id);
-      sessionStorage.setItem("currentEstimateMode", "saved");
-      setRevisionNote("");
-      setShowRevisionForm(false);
-      setSaveStatus("saved");
-    }
-  }, [estimate, customer, savedRecord, revisionNote]);
-
   const handleMarkSent = useCallback(() => {
     if (!savedRecord) return;
     const updated = setEstimateStatus(savedRecord.id, "sent");
@@ -190,7 +168,7 @@ export default function SummaryPage({
               variant="ghost"
               size="icon"
               className="h-8 w-8 -ml-2"
-              onClick={() => router.back()}
+              onClick={() => router.push("/")}
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
@@ -200,11 +178,6 @@ export default function SummaryPage({
             {savedRecord && (
               <div className="flex items-center gap-1.5">
                 <StatusBadge status={savedRecord.status} />
-                {savedRecord.revisionNumber > 1 && (
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                    v{savedRecord.revisionNumber}
-                  </span>
-                )}
               </div>
             )}
           </div>
@@ -217,11 +190,6 @@ export default function SummaryPage({
         <div className="hidden print:block text-center pb-4 border-b">
           <h1 className="text-2xl font-bold">Field Estimate</h1>
           <p className="text-sm text-muted-foreground">{estimateDate}</p>
-          {savedRecord && savedRecord.revisionNumber > 1 && (
-            <p className="text-xs text-muted-foreground">
-              Revision {savedRecord.revisionNumber}
-            </p>
-          )}
         </div>
 
         {/* Customer card */}
@@ -425,9 +393,6 @@ export default function SummaryPage({
                 <BookmarkCheck className="w-4 h-4 shrink-0" />
                 <span className="text-sm font-medium truncate">
                   Auto-saved
-                  {savedRecord.revisionNumber > 1
-                    ? ` · v${savedRecord.revisionNumber}`
-                    : ""}
                 </span>
               </div>
               <Link
@@ -449,20 +414,12 @@ export default function SummaryPage({
             </Button>
           )}
 
-          {/* Saved-record actions: revision, share, status */}
+          {/* Saved-record actions: share, status */}
           {savedRecord && (
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                className="h-11"
-                onClick={() => setShowRevisionForm((v) => !v)}
-              >
-                <GitBranch className="w-4 h-4 mr-1.5" />
-                Save New Revision
-              </Button>
-              <Button
-                variant="outline"
-                className="h-11"
+                className="h-11 col-span-2"
                 onClick={handleCopyShareLink}
               >
                 <LinkIcon className="w-4 h-4 mr-1.5" />
@@ -498,37 +455,6 @@ export default function SummaryPage({
                   </>
                 )}
               </Button>
-            </div>
-          )}
-
-          {showRevisionForm && savedRecord && (
-            <div className="rounded-xl border bg-card p-3 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                What changed in this revision?
-              </p>
-              <textarea
-                placeholder="e.g. Added a backup capacitor; updated labor to comprehensive maintenance."
-                value={revisionNote}
-                onChange={(e) => setRevisionNote(e.target.value)}
-                className="w-full min-h-[80px] rounded-md border bg-background p-2 text-sm resize-none outline-none focus:ring-2 focus:ring-primary/30"
-              />
-              <div className="flex justify-end gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowRevisionForm(false)}
-                >
-                  Cancel
-                </Button>
-                <Button size="sm" onClick={handleSaveNewRevision}>
-                  Create Revision
-                </Button>
-              </div>
-              <p className="text-[11px] text-muted-foreground">
-                A new estimate record will be linked to v
-                {savedRecord.revisionNumber} and become v
-                {savedRecord.revisionNumber + 1}.
-              </p>
             </div>
           )}
 

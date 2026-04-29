@@ -37,8 +37,8 @@ export default function EstimateBuilderPage({
   const [selectedLabor, setSelectedLabor] = useState<LaborRate | null>(null);
   const [notes, setNotes] = useState("");
   const [activeSection, setActiveSection] = useState<
-    "equipment" | "labor" | "notes"
-  >("equipment");
+    "notes" | "equipment" | "labor"
+  >("notes");
 
   // Restore draft or clear stale saved context depending on session mode
   useEffect(() => {
@@ -185,6 +185,19 @@ export default function EstimateBuilderPage({
   const hasEquipment = lineItems.length > 0;
   const showNoLaborWarning = hasEquipment && !selectedLabor;
 
+  const SECTION_ORDER = ["notes", "equipment", "labor"] as const;
+  type Section = typeof SECTION_ORDER[number];
+  const currentIdx = SECTION_ORDER.indexOf(activeSection as Section);
+  const isFirst = currentIdx === 0;
+  const isLast = currentIdx === SECTION_ORDER.length - 1;
+
+  function goNext() {
+    if (!isLast) setActiveSection(SECTION_ORDER[currentIdx + 1]);
+  }
+  function goBack() {
+    if (!isFirst) setActiveSection(SECTION_ORDER[currentIdx - 1]);
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-10 bg-background border-b">
@@ -214,6 +227,12 @@ export default function EstimateBuilderPage({
             {(
               [
                 {
+                  key: "notes",
+                  label: "Notes",
+                  icon: FileText,
+                  count: notes.trim() ? 1 : 0,
+                },
+                {
                   key: "equipment",
                   label: "Equipment",
                   icon: Package,
@@ -225,12 +244,6 @@ export default function EstimateBuilderPage({
                   icon: HardHat,
                   count: selectedLabor ? 1 : 0,
                 },
-              {
-                key: "notes",
-                label: "Notes",
-                icon: FileText,
-                count: notes.trim() ? 1 : 0,
-              },
             ] as const
             ).map(({ key, label, icon: Icon, count }) => (
               <button
@@ -357,6 +370,10 @@ export default function EstimateBuilderPage({
           lineItems={lineItems}
           laborRate={selectedLabor}
           onViewSummary={handleViewSummary}
+          onNext={goNext}
+          onBack={goBack}
+          isFirst={isFirst}
+          isLast={isLast}
           showNoLaborWarning={showNoLaborWarning}
         />
       </div>

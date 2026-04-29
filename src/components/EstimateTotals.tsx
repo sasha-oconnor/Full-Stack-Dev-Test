@@ -8,12 +8,16 @@ import {
   calcEstimateRange,
 } from "@/lib/calculations";
 import type { EstimateLineItem, LaborRate } from "@/lib/types";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface EstimateTotalsProps {
   lineItems: EstimateLineItem[];
   laborRate: LaborRate | null;
   onViewSummary: () => void;
+  onNext: () => void;
+  onBack: () => void;
+  isFirst: boolean;
+  isLast: boolean;
   disabled?: boolean;
   showNoLaborWarning?: boolean;
 }
@@ -22,6 +26,10 @@ export function EstimateTotals({
   lineItems,
   laborRate,
   onViewSummary,
+  onNext,
+  onBack,
+  isFirst,
+  isLast,
   disabled,
   showNoLaborWarning,
 }: EstimateTotalsProps) {
@@ -88,15 +96,37 @@ export function EstimateTotals({
           </p>
         )}
 
-        {/* CTA */}
-        <Button
-          className="w-full h-12 text-base font-semibold"
-          onClick={onViewSummary}
-          disabled={disabled || !canProceed}
-        >
-          View Summary
-          <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
+        {/* Navigation controls */}
+        <div className="flex items-center gap-2">
+          {!isFirst && (
+            <Button
+              variant="outline"
+              className="h-12 w-24 shrink-0"
+              onClick={onBack}
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              Back
+            </Button>
+          )}
+          {isLast ? (
+            <Button
+              className="flex-1 h-12 text-base font-semibold"
+              onClick={onViewSummary}
+              disabled={disabled || !canProceed}
+            >
+              View Summary
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          ) : (
+            <Button
+              className="flex-1 h-12 text-base font-semibold"
+              onClick={onNext}
+            >
+              Next
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

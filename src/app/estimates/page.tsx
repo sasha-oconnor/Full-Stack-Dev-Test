@@ -196,11 +196,6 @@ export default function SavedEstimatesPage() {
                       {est.customerName}
                     </p>
                     <StatusBadge status={est.status} />
-                    {est.revisionNumber > 1 && (
-                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                        v{est.revisionNumber}
-                      </span>
-                    )}
                   </div>
                   <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground">
                     <span className="font-mono">{est.customerId}</span>
@@ -234,11 +229,6 @@ export default function SavedEstimatesPage() {
                     · Labor:{" "}
                     {formatCurrency(est.totals.laborMin ?? 0)}–
                     {formatCurrency(est.totals.laborMax ?? 0)}
-                  </span>
-                )}
-                {est.revisionNote && (
-                  <span className="block mt-0.5 italic">
-                    “{est.revisionNote}”
                   </span>
                 )}
               </div>
