@@ -92,14 +92,17 @@ export function LaborSelector({
         {jobTypes.map((jobType) => {
           const isExpanded = expandedJobType === jobType;
           const isSelected = selected?.jobType === jobType;
+          const buttonClass = isExpanded
+            ? "bg-primary text-primary-foreground border-primary"
+            : isSelected
+              ? "bg-primary/10 text-primary border-primary/30"
+              : "bg-background text-foreground border-border hover:bg-muted";
           return (
             <button
               key={jobType}
               onClick={() => handleJobTypeClick(jobType)}
               className={`px-3 py-2.5 min-h-[44px] rounded-lg text-sm font-medium transition-colors border ${
-                isExpanded || isSelected
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border hover:bg-muted"
+                buttonClass
               }`}
             >
               {JOB_TYPE_LABELS[jobType] ?? jobType}

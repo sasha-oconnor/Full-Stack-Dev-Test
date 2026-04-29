@@ -226,7 +226,7 @@ export default function EstimateBuilderPage({
               {!selectedLabor && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   {customer.propertyType === "residential"
-                    ? "Tip: For residential customers, Installation (Residential) or Repair (Standard) are common choices."
+                    ? "Tip: For residential customers, Installation (Residential) or Repair (Minor) are common choices."
                     : "Tip: For commercial customers, Installation (Commercial) or Maintenance (Commercial) are common choices."}
                 </div>
               )}
