@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ProgressSteps } from "@/components/ProgressSteps";
+import { StatusBadge } from "@/components/StatusBadge";
 import { getCustomerById } from "@/lib/data";
 import {
   formatCurrency,
@@ -19,8 +20,10 @@ import {
   saveEstimate,
   updateEstimate,
   getSavedEstimate,
+  saveAsNewRevision,
+  setEstimateStatus,
 } from "@/lib/saved-estimates";
-import type { Estimate } from "@/lib/types";
+import type { Estimate, SavedEstimate } from "@/lib/types";
 import {
   ArrowLeft,
   Printer,
@@ -34,6 +37,10 @@ import {
   Clock,
   BookmarkCheck,
   Bookmark,
+  GitBranch,
+  Link as LinkIcon,
+  Send,
+  Check,
 } from "lucide-react";
 
 type SaveStatus = "idle" | "saving" | "saved" | "updated";
@@ -47,12 +54,18 @@ export default function SummaryPage({
   const router = useRouter();
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [savedId, setSavedId] = useState<string | null>(null);
+  const [savedRecord, setSavedRecord] = useState<SavedEstimate | null>(null);
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [showRevisionForm, setShowRevisionForm] = useState(false);
+  const [revisionNote, setRevisionNote] = useState("");
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     const raw = sessionStorage.getItem("currentEstimate");
-    if (!raw) { setLoaded(true); return; }
+    if (!raw) {
+      setLoaded(true);
+      return;
+    }
     try {
       const parsed: Estimate = JSON.parse(raw);
       setEstimate(parsed);
@@ -60,21 +73,24 @@ export default function SummaryPage({
       const mode = sessionStorage.getItem("currentEstimateMode");
       const existingId = sessionStorage.getItem("currentEstimateId");
 
-      // Only auto-save when this estimate was explicitly opened from the saved list
-      if (mode === "saved" && existingId && getSavedEstimate(existingId)) {
-        const cust = getCustomerById(parsed.customerId);
-        if (cust) {
-          updateEstimate(existingId, parsed, cust.name);
+      if (mode === "saved" && existingId) {
+        const existing = getSavedEstimate(existingId);
+        if (existing) {
+          const cust = getCustomerById(parsed.customerId);
+          if (cust) {
+            const updated = updateEstimate(existingId, parsed, cust.name);
+            setSavedRecord(updated ?? existing);
+          } else {
+            setSavedRecord(existing);
+          }
+          setSaveStatus("saved");
         }
-        setSavedId(existingId);
-        setSaveStatus("saved");
       }
-      // mode === "new" → show manual Save button, no auto-save
     } catch {
       // ignore malformed storage
     }
     setLoaded(true);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const customer = getCustomerById(customerId);
@@ -83,20 +99,59 @@ export default function SummaryPage({
     if (!estimate || !customer) return;
     setSaveStatus("saving");
 
-    if (savedId) {
-      updateEstimate(savedId, estimate, customer.name);
+    if (savedRecord) {
+      const updated = updateEstimate(savedRecord.id, estimate, customer.name);
+      if (updated) setSavedRecord(updated);
       setSaveStatus("updated");
     } else {
       const record = saveEstimate(estimate, customer.name);
-      setSavedId(record.id);
+      setSavedRecord(record);
       sessionStorage.setItem("currentEstimateId", record.id);
-      sessionStorage.setItem("currentEstimateMode", "saved"); // promote to saved mode
+      sessionStorage.setItem("currentEstimateMode", "saved");
       setSaveStatus("saved");
     }
+    setTimeout(
+      () => setSaveStatus((s) => (s !== "idle" ? "saved" : "idle")),
+      2500
+    );
+  }, [estimate, customer, savedRecord]);
 
-    // Reset status feedback after 2.5s
-    setTimeout(() => setSaveStatus((s) => (s !== "idle" ? "saved" : "idle")), 2500);
-  }, [estimate, customer, savedId]);
+  const handleSaveNewRevision = useCallback(() => {
+    if (!estimate || !customer || !savedRecord) return;
+    const created = saveAsNewRevision(
+      savedRecord.id,
+      estimate,
+      customer.name,
+      revisionNote
+    );
+    if (created) {
+      setSavedRecord(created);
+      sessionStorage.setItem("currentEstimateId", created.id);
+      sessionStorage.setItem("currentEstimateMode", "saved");
+      setRevisionNote("");
+      setShowRevisionForm(false);
+      setSaveStatus("saved");
+    }
+  }, [estimate, customer, savedRecord, revisionNote]);
+
+  const handleMarkSent = useCallback(() => {
+    if (!savedRecord) return;
+    const updated = setEstimateStatus(savedRecord.id, "sent");
+    if (updated) setSavedRecord(updated);
+  }, [savedRecord]);
+
+  const handleCopyShareLink = useCallback(async () => {
+    if (!savedRecord) return;
+    const url = `${window.location.origin}/shared/${savedRecord.shareToken}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2500);
+    } catch {
+      // Fallback: prompt the user
+      window.prompt("Copy this share link:", url);
+    }
+  }, [savedRecord]);
 
   if (!loaded) return null;
 
@@ -126,12 +181,10 @@ export default function SummaryPage({
     day: "numeric",
   });
 
-
   return (
     <div className="min-h-screen bg-muted/30">
-      {/* Header — hidden when printing */}
       <header className="sticky top-0 z-10 bg-background border-b print:hidden">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-1">
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-1">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
@@ -141,17 +194,34 @@ export default function SummaryPage({
             >
               <ArrowLeft className="w-4 h-4" />
             </Button>
-            <span className="flex-1 font-semibold text-sm">Estimate Summary</span>
+            <span className="flex-1 font-semibold text-sm">
+              Estimate Summary
+            </span>
+            {savedRecord && (
+              <div className="flex items-center gap-1.5">
+                <StatusBadge status={savedRecord.status} />
+                {savedRecord.revisionNumber > 1 && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                    v{savedRecord.revisionNumber}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <ProgressSteps step={3} />
         </div>
       </header>
 
-      <main className="max-w-lg mx-auto px-4 py-5 space-y-4 print:px-0 print:py-0 print:space-y-3">
-        {/* Company header (print only) */}
+      <main className="max-w-2xl mx-auto px-4 py-5 space-y-4 print:px-0 print:py-0 print:space-y-3 lg:max-w-3xl">
+        {/* Print header */}
         <div className="hidden print:block text-center pb-4 border-b">
           <h1 className="text-2xl font-bold">Field Estimate</h1>
           <p className="text-sm text-muted-foreground">{estimateDate}</p>
+          {savedRecord && savedRecord.revisionNumber > 1 && (
+            <p className="text-xs text-muted-foreground">
+              Revision {savedRecord.revisionNumber}
+            </p>
+          )}
         </div>
 
         {/* Customer card */}
@@ -342,7 +412,6 @@ export default function SummaryPage({
           </div>
         </div>
 
-        {/* Estimate date */}
         <p className="text-center text-xs text-muted-foreground print:hidden">
           Generated {estimateDate}
         </p>
@@ -350,14 +419,22 @@ export default function SummaryPage({
         {/* CTA group */}
         <div className="space-y-3 pb-8 print:hidden">
           {/* Save / auto-saved indicator */}
-          {savedId ? (
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-50 border border-green-200">
-              <div className="flex items-center gap-2 text-green-700">
-                <BookmarkCheck className="w-4 h-4" />
-                <span className="text-sm font-medium">Auto-saved</span>
+          {savedRecord ? (
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-50 border border-green-200 gap-3">
+              <div className="flex items-center gap-2 text-green-700 min-w-0">
+                <BookmarkCheck className="w-4 h-4 shrink-0" />
+                <span className="text-sm font-medium truncate">
+                  Auto-saved
+                  {savedRecord.revisionNumber > 1
+                    ? ` · v${savedRecord.revisionNumber}`
+                    : ""}
+                </span>
               </div>
-              <Link href="/estimates" className="text-xs text-green-700 underline underline-offset-2">
-                View all estimates
+              <Link
+                href="/estimates"
+                className="text-xs text-green-700 underline underline-offset-2 shrink-0"
+              >
+                View all
               </Link>
             </div>
           ) : (
@@ -370,6 +447,89 @@ export default function SummaryPage({
               <Bookmark className="w-4 h-4 mr-2" />
               {saveStatus === "saving" ? "Saving…" : "Save Estimate"}
             </Button>
+          )}
+
+          {/* Saved-record actions: revision, share, status */}
+          {savedRecord && (
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                className="h-11"
+                onClick={() => setShowRevisionForm((v) => !v)}
+              >
+                <GitBranch className="w-4 h-4 mr-1.5" />
+                Save New Revision
+              </Button>
+              <Button
+                variant="outline"
+                className="h-11"
+                onClick={handleCopyShareLink}
+              >
+                <LinkIcon className="w-4 h-4 mr-1.5" />
+                {shareCopied ? "Copied!" : "Copy Share Link"}
+              </Button>
+              <Button
+                variant="outline"
+                className="h-11 col-span-2"
+                onClick={handleMarkSent}
+                disabled={savedRecord.status !== "draft"}
+                title={
+                  savedRecord.status !== "draft"
+                    ? `Already ${savedRecord.status}`
+                    : "Mark as sent to customer"
+                }
+              >
+                {savedRecord.status === "approved" ? (
+                  <>
+                    <Check className="w-4 h-4 mr-1.5" />
+                    Approved by customer
+                  </>
+                ) : savedRecord.status === "rejected" ? (
+                  <>Customer declined</>
+                ) : savedRecord.status === "sent" ? (
+                  <>
+                    <Send className="w-4 h-4 mr-1.5" />
+                    Sent — awaiting response
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-1.5" />
+                    Mark as sent
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+
+          {showRevisionForm && savedRecord && (
+            <div className="rounded-xl border bg-card p-3 space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                What changed in this revision?
+              </p>
+              <textarea
+                placeholder="e.g. Added a backup capacitor; updated labor to comprehensive maintenance."
+                value={revisionNote}
+                onChange={(e) => setRevisionNote(e.target.value)}
+                className="w-full min-h-[80px] rounded-md border bg-background p-2 text-sm resize-none outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRevisionForm(false)}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleSaveNewRevision}>
+                  Create Revision
+                </Button>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                A new estimate record will be linked to v
+                {savedRecord.revisionNumber} and become v
+                {savedRecord.revisionNumber + 1}.
+              </p>
+            </div>
           )}
 
           {/* Print */}
@@ -397,6 +557,7 @@ export default function SummaryPage({
               onClick={() => {
                 sessionStorage.removeItem("currentEstimateId");
                 sessionStorage.setItem("currentEstimateMode", "new");
+                sessionStorage.removeItem("currentEstimate");
               }}
             >
               <Button variant="outline" className="w-full h-11">

@@ -47,7 +47,7 @@ export function ProgressSteps({ step }: ProgressStepsProps) {
 
             {i < STEPS.length - 1 && (
               <div
-                className={`w-10 h-px mx-1 mb-3 transition-colors ${
+                className={`w-7 sm:w-10 h-px mx-1 mb-3 transition-colors ${
                   num < step ? "bg-primary" : "bg-border"
                 }`}
               />

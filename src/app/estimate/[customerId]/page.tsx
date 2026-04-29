@@ -4,15 +4,21 @@ import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { LaborSelector } from "@/components/LaborSelector";
 import { LineItemRow } from "@/components/LineItemRow";
 import { EstimateTotals } from "@/components/EstimateTotals";
 import { ProgressSteps } from "@/components/ProgressSteps";
+import { VoiceNotesField } from "@/components/VoiceNotesField";
+import { AiAssistPanel } from "@/components/AiAssistPanel";
 import { getCustomerById, getEquipment, getLaborRates } from "@/lib/data";
-import type { Equipment, EstimateLineItem, LaborRate } from "@/lib/types";
+import type {
+  Equipment,
+  EquipmentSuggestion,
+  EstimateLineItem,
+  LaborRate,
+} from "@/lib/types";
 import { ArrowLeft, Package, HardHat, FileText } from "lucide-react";
 
 export default function EstimateBuilderPage({
@@ -41,7 +47,6 @@ export default function EstimateBuilderPage({
       const mode = sessionStorage.getItem("currentEstimateMode");
 
       if (!raw) {
-        // No draft at all — definitely a fresh start, purge any stale saved context
         sessionStorage.removeItem("currentEstimateId");
         sessionStorage.setItem("currentEstimateMode", "new");
         return;
@@ -49,28 +54,26 @@ export default function EstimateBuilderPage({
 
       const draft = JSON.parse(raw);
 
-      if (mode === "saved" && draft.customerId === customerId) {
-        // Legitimate edit-saved-estimate flow (arrived via /estimates Open or Edit Estimate)
-        // Restore draft and preserve saved context so summary can auto-save
+      const applyDraft = () => {
         if (Array.isArray(draft.lineItems)) setLineItems(draft.lineItems);
         if (draft.laborRate !== undefined) setSelectedLabor(draft.laborRate);
         if (typeof draft.notes === "string") setNotes(draft.notes);
+      };
+
+      if (mode === "saved" && draft.customerId === customerId) {
+        applyDraft();
       } else {
-        // Fresh flow or wrong customer — clear stale saved context
         sessionStorage.removeItem("currentEstimateId");
         sessionStorage.setItem("currentEstimateMode", "new");
-        // Still restore this customer's last draft (if one exists)
         if (draft.customerId === customerId) {
-          if (Array.isArray(draft.lineItems)) setLineItems(draft.lineItems);
-          if (draft.laborRate !== undefined) setSelectedLabor(draft.laborRate);
-          if (typeof draft.notes === "string") setNotes(draft.notes);
+          applyDraft();
         }
       }
     } catch {
       sessionStorage.removeItem("currentEstimateId");
       sessionStorage.setItem("currentEstimateMode", "new");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!customer) {
@@ -97,6 +100,51 @@ export default function EstimateBuilderPage({
         );
       }
       return [...prev, { equipment, quantity: 1 }];
+    });
+  }
+
+  function handleApplyEquipmentSuggestion(s: EquipmentSuggestion) {
+    const item = allEquipment.find((e) => e.id === s.equipmentId);
+    if (!item) return;
+    setLineItems((prev) => {
+      const existing = prev.find((li) => li.equipment.id === item.id);
+      const qty = Math.max(1, s.quantity);
+      if (existing) {
+        return prev.map((li) =>
+          li.equipment.id === item.id
+            ? { ...li, quantity: li.quantity + qty }
+            : li
+        );
+      }
+      return [...prev, { equipment: item, quantity: qty }];
+    });
+  }
+
+  function handleApplyLaborSuggestion(rate: LaborRate) {
+    setSelectedLabor(rate);
+  }
+
+  function handleInsertSummary(text: string) {
+    setNotes((prev) => {
+      const trimmed = prev.trim();
+      const bullets = text
+        .split(/\n+/)
+        .flatMap((line) => line.split(/(?<=[.!?])\s+/))
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .map((line) => `- ${line}`)
+        .join("\n");
+      const block = bullets || `- ${text.trim()}`;
+      return trimmed ? `${trimmed}\n\n${block}` : block;
+    });
+  }
+
+  function handleAppendNoteLine(line: string) {
+    const cleaned = line.trim();
+    if (!cleaned) return;
+    setNotes((prev) => {
+      const trimmed = prev.trim();
+      return trimmed ? `${trimmed}\n${cleaned}` : cleaned;
     });
   }
 
@@ -139,9 +187,8 @@ export default function EstimateBuilderPage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="max-w-lg mx-auto px-4 pt-3 pb-1">
+        <div className="max-w-2xl mx-auto px-4 pt-3 pb-1">
           <div className="flex items-center gap-2">
             <Link href="/">
               <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2">
@@ -162,9 +209,8 @@ export default function EstimateBuilderPage({
           <ProgressSteps step={2} />
         </div>
 
-        {/* Section tabs */}
-        <div className="max-w-lg mx-auto px-4 pb-0">
-          <div className="flex border-b">
+        <div className="max-w-2xl mx-auto px-4 pb-0">
+          <div className="flex border-b overflow-x-auto">
             {(
               [
                 {
@@ -179,18 +225,18 @@ export default function EstimateBuilderPage({
                   icon: HardHat,
                   count: selectedLabor ? 1 : 0,
                 },
-                {
-                  key: "notes",
-                  label: "Notes",
-                  icon: FileText,
-                  count: notes.trim() ? 1 : 0,
-                },
-              ] as const
+              {
+                key: "notes",
+                label: "Notes",
+                icon: FileText,
+                count: notes.trim() ? 1 : 0,
+              },
+            ] as const
             ).map(({ key, label, icon: Icon, count }) => (
               <button
                 key={key}
                 onClick={() => setActiveSection(key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium border-b-2 transition-colors ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
                   activeSection === key
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -209,9 +255,8 @@ export default function EstimateBuilderPage({
         </div>
       </header>
 
-      {/* Scrollable content */}
       <main className="flex-1 overflow-auto">
-        <div className="max-w-lg mx-auto px-4 py-4 pb-28 space-y-4">
+        <div className="max-w-2xl mx-auto px-4 py-4 pb-28 space-y-4 lg:max-w-3xl">
           {activeSection === "equipment" && (
             <>
               {lineItems.length > 0 && (
@@ -261,7 +306,6 @@ export default function EstimateBuilderPage({
                 </p>
               </div>
 
-              {/* Property-type hint when nothing selected yet */}
               {!selectedLabor && (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   {customer.propertyType === "residential"
@@ -279,22 +323,35 @@ export default function EstimateBuilderPage({
           )}
 
           {activeSection === "notes" && (
-            <div className="space-y-2">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Technician Notes
-              </h3>
-              <Textarea
-                placeholder="Add notes about the job, site conditions, customer requests…"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="min-h-[180px] text-base resize-none"
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  Technician Notes
+                </h3>
+                <VoiceNotesField
+                  value={notes}
+                  onChange={setNotes}
+                  placeholder="Add notes about the job, site conditions, customer requests…"
+                />
+              </div>
+
+              <AiAssistPanel
+                customer={customer}
+                notes={notes}
+                selectedLineItems={lineItems}
+                selectedLabor={selectedLabor}
+                laborRates={laborRates}
+                onApplyEquipment={handleApplyEquipmentSuggestion}
+                onApplyLabor={handleApplyLaborSuggestion}
+                onClearLabor={() => setSelectedLabor(null)}
+                onInsertSummaryDraft={handleInsertSummary}
+                onAppendNoteLine={handleAppendNoteLine}
               />
             </div>
           )}
         </div>
       </main>
 
-      {/* Sticky bottom totals */}
       <div className="sticky bottom-0 z-10">
         <EstimateTotals
           lineItems={lineItems}

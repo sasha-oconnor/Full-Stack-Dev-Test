@@ -34,7 +34,7 @@ export function EstimateTotals({
 
   return (
     <div className="border-t shadow-[0_-2px_8px_rgba(0,0,0,0.06)] bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
-      <div className="max-w-lg mx-auto px-4 pt-3 pb-4 space-y-3">
+      <div className="max-w-2xl lg:max-w-3xl mx-auto px-4 pt-3 pb-4 space-y-3">
 
         {/* Totals breakdown */}
         {hasItems && (
