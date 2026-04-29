@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ProgressSteps } from "@/components/ProgressSteps";
 import { getCustomerById } from "@/lib/data";
 import {
   formatCurrency,
@@ -84,31 +85,19 @@ export default function SummaryPage({
     <div className="min-h-screen bg-muted/30">
       {/* Header — hidden when printing */}
       <header className="sticky top-0 z-10 bg-background border-b print:hidden">
-        <div className="max-w-lg mx-auto px-4 py-3 flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 -ml-2"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <span className="flex-1 font-semibold text-sm">Estimate Summary</span>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.print()}
-            className="gap-1.5"
-          >
-            <Printer className="w-4 h-4" />
-            Print
-          </Button>
-          <Link href="/">
-            <Button size="sm" className="gap-1.5">
-              <PlusCircle className="w-4 h-4" />
-              New
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-1">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 -ml-2"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="w-4 h-4" />
             </Button>
-          </Link>
+            <span className="flex-1 font-semibold text-sm">Estimate Summary</span>
+          </div>
+          <ProgressSteps step={3} />
         </div>
       </header>
 
@@ -274,11 +263,11 @@ export default function SummaryPage({
           <div className="px-4 py-3 space-y-2">
             {estimate.lineItems.length > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
-                <span>Equipment</span>
+                <span>Equipment subtotal</span>
                 <span>{formatCurrency(equipmentTotal)}</span>
               </div>
             )}
-            {laborRange && (
+            {laborRange ? (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Labor (estimated)</span>
                 <span>
@@ -286,10 +275,14 @@ export default function SummaryPage({
                   {formatCurrency(laborRange.max)}
                 </span>
               </div>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">
+                No labor selected.
+              </p>
             )}
             <Separator />
-            <div className="flex justify-between font-bold text-base">
-              <span>Total</span>
+            <div className="flex justify-between font-bold text-lg">
+              <span>Grand Total</span>
               <span>
                 {totalRange.min === totalRange.max
                   ? formatCurrency(totalRange.min)
@@ -297,8 +290,8 @@ export default function SummaryPage({
               </span>
             </div>
             <p className="text-xs text-muted-foreground">
-              * Labor is an estimate based on typical job duration. Final cost
-              may vary.
+              * Labor is estimated for the full job based on typical job duration
+              and hourly rates. Actual cost may vary based on site conditions.
             </p>
           </div>
         </div>
@@ -308,24 +301,32 @@ export default function SummaryPage({
           Generated {estimateDate}
         </p>
 
-        {/* Action buttons */}
-        <div className="flex gap-3 pb-6 print:hidden">
+        {/* CTA group */}
+        <div className="space-y-3 pb-8 print:hidden">
           <Button
-            variant="outline"
-            className="flex-1"
-            onClick={() => router.back()}
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Edit Estimate
-          </Button>
-          <Button
-            variant="outline"
-            className="flex-1"
+            className="w-full h-12 text-base"
             onClick={() => window.print()}
           >
             <Printer className="w-4 h-4 mr-2" />
-            Print / Share
+            Print / Share Estimate
           </Button>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1 h-11"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="w-4 h-4 mr-1.5" />
+              Edit Estimate
+            </Button>
+            <Link href="/" className="flex-1">
+              <Button variant="outline" className="w-full h-11">
+                <PlusCircle className="w-4 h-4 mr-1.5" />
+                New Estimate
+              </Button>
+            </Link>
+          </div>
         </div>
       </main>
     </div>

@@ -17,7 +17,7 @@ export default function CustomerSelectionPage() {
               <h1 className="text-lg font-bold leading-tight">
                 Field Estimate Tool
               </h1>
-              <p className="text-xs text-muted-foreground">Select a customer</p>
+              <p className="text-xs text-muted-foreground">Step 1 of 3 — Select a customer to begin</p>
             </div>
           </div>
         </div>

@@ -10,6 +10,7 @@ import { EquipmentPicker } from "@/components/EquipmentPicker";
 import { LaborSelector } from "@/components/LaborSelector";
 import { LineItemRow } from "@/components/LineItemRow";
 import { EstimateTotals } from "@/components/EstimateTotals";
+import { ProgressSteps } from "@/components/ProgressSteps";
 import { getCustomerById, getEquipment, getLaborRates } from "@/lib/data";
 import type { Equipment, EstimateLineItem, LaborRate } from "@/lib/types";
 import { ArrowLeft, Package, HardHat, FileText } from "lucide-react";
@@ -94,12 +95,14 @@ export default function EstimateBuilderPage({
   }
 
   const itemCount = lineItems.reduce((sum, li) => sum + li.quantity, 0);
+  const hasEquipment = lineItems.length > 0;
+  const showNoLaborWarning = hasEquipment && !selectedLabor;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="max-w-lg mx-auto px-4 py-3">
+        <div className="max-w-lg mx-auto px-4 pt-3 pb-1">
           <div className="flex items-center gap-2">
             <Link href="/">
               <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2">
@@ -116,6 +119,8 @@ export default function EstimateBuilderPage({
               </p>
             </div>
           </div>
+
+          <ProgressSteps step={2} />
         </div>
 
         {/* Section tabs */}
@@ -131,7 +136,7 @@ export default function EstimateBuilderPage({
                 },
                 {
                   key: "labor",
-                  label: "Labor",
+                  label: "Service",
                   icon: HardHat,
                   count: selectedLabor ? 1 : 0,
                 },
@@ -167,7 +172,7 @@ export default function EstimateBuilderPage({
 
       {/* Scrollable content */}
       <main className="flex-1 overflow-auto">
-        <div className="max-w-lg mx-auto px-4 py-4 pb-2 space-y-4">
+        <div className="max-w-lg mx-auto px-4 py-4 pb-28 space-y-4">
           {activeSection === "equipment" && (
             <>
               {lineItems.length > 0 && (
@@ -204,10 +209,28 @@ export default function EstimateBuilderPage({
           )}
 
           {activeSection === "labor" && (
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
-                Select Job Type &amp; Level
-              </h3>
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold mb-0.5">
+                  Choose Primary Service
+                </h3>
+                <p className="text-xs text-muted-foreground">
+                  Select one service type for this job.{" "}
+                  {customer.propertyType === "residential"
+                    ? "This customer is residential."
+                    : "This customer is commercial."}
+                </p>
+              </div>
+
+              {/* Property-type hint when nothing selected yet */}
+              {!selectedLabor && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  {customer.propertyType === "residential"
+                    ? "Tip: For residential customers, Installation (Residential) or Repair (Standard) are common choices."
+                    : "Tip: For commercial customers, Installation (Commercial) or Maintenance (Commercial) are common choices."}
+                </div>
+              )}
+
               <LaborSelector
                 laborRates={laborRates}
                 selected={selectedLabor}
@@ -238,6 +261,7 @@ export default function EstimateBuilderPage({
           lineItems={lineItems}
           laborRate={selectedLabor}
           onViewSummary={handleViewSummary}
+          showNoLaborWarning={showNoLaborWarning}
         />
       </div>
     </div>

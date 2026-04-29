@@ -15,6 +15,7 @@ interface EstimateTotalsProps {
   laborRate: LaborRate | null;
   onViewSummary: () => void;
   disabled?: boolean;
+  showNoLaborWarning?: boolean;
 }
 
 export function EstimateTotals({
@@ -22,6 +23,7 @@ export function EstimateTotals({
   laborRate,
   onViewSummary,
   disabled,
+  showNoLaborWarning,
 }: EstimateTotalsProps) {
   const equipmentTotal = calcEquipmentTotal(lineItems);
   const laborRange = laborRate ? calcLaborRange(laborRate) : null;
@@ -30,7 +32,7 @@ export function EstimateTotals({
   const hasItems = lineItems.length > 0 || laborRate !== null;
 
   return (
-    <div className="border-t bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div className="border-t shadow-[0_-2px_8px_rgba(0,0,0,0.06)] bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <div className="max-w-lg mx-auto px-4 py-3 space-y-2">
         {hasItems && (
           <div className="space-y-1 text-sm">
@@ -41,15 +43,20 @@ export function EstimateTotals({
               </div>
             )}
             {laborRange && (
-              <div className="flex justify-between text-muted-foreground">
-                <span>Labor (est.)</span>
-                <span>
-                  {formatCurrency(laborRange.min)}–
-                  {formatCurrency(laborRange.max)}
-                </span>
-              </div>
+              <>
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Labor (est.)</span>
+                  <span>
+                    {formatCurrency(laborRange.min)}–
+                    {formatCurrency(laborRange.max)}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Labor applies to the full job, not per item.
+                </p>
+              </>
             )}
-            <div className="flex justify-between font-semibold text-base pt-1 border-t">
+            <div className="flex justify-between font-bold text-lg pt-1 border-t">
               <span>Total Estimate</span>
               <span>
                 {totalRange.min === totalRange.max
@@ -58,6 +65,12 @@ export function EstimateTotals({
               </span>
             </div>
           </div>
+        )}
+
+        {showNoLaborWarning && (
+          <p className="text-xs text-amber-600 font-medium text-center">
+            No labor selected — estimate will show equipment cost only.
+          </p>
         )}
 
         <Button
