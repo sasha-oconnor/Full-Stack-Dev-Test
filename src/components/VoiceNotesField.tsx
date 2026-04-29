@@ -268,7 +268,7 @@ export function VoiceNotesField({
            * Styled to match the textarea so the swap is seamless.
            */
           <div
-            className="min-h-[180px] w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base md:text-sm overflow-auto whitespace-pre-wrap break-words pr-14 pb-12"
+            className="min-h-[180px] w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base md:text-sm overflow-auto whitespace-pre-wrap wrap-break-word pr-14 pb-12"
             aria-live="polite"
             aria-label="Dictation in progress"
           >
