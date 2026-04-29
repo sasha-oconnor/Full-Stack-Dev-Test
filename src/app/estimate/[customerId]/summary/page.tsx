@@ -39,6 +39,9 @@ import {
   Link as LinkIcon,
   Send,
   Check,
+  Package,
+  HardHat,
+  FileText,
 } from "lucide-react";
 
 type SaveStatus = "idle" | "saving" | "saved" | "updated";
@@ -160,14 +163,14 @@ export default function SummaryPage({
   });
 
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="sticky top-0 z-10 bg-background border-b print:hidden">
+    <div className="min-h-screen bg-background">
+      <header className="sticky top-0 z-10 bg-card border-b shadow-sm print:hidden">
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-1">
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 -ml-2"
+              className="h-8 w-8 -ml-2 hover:bg-primary/10 hover:text-primary"
               onClick={() => router.push("/")}
             >
               <ArrowLeft className="w-4 h-4" />
@@ -193,10 +196,10 @@ export default function SummaryPage({
         </div>
 
         {/* Customer card */}
-        <div className="bg-background rounded-xl border p-4 space-y-3">
-          <div className="flex items-start justify-between gap-2">
+        <div className="bg-card rounded-xl border overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b bg-primary/5 flex items-start justify-between gap-2">
             <div>
-              <h2 className="font-bold text-lg leading-tight">{customer.name}</h2>
+              <h2 className="font-bold text-base leading-tight text-foreground">{customer.name}</h2>
               <Badge
                 variant={
                   customer.propertyType === "commercial" ? "default" : "secondary"
@@ -211,14 +214,11 @@ export default function SummaryPage({
                 {customer.propertyType}
               </Badge>
             </div>
-            <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded">
+            <span className="text-xs text-muted-foreground font-mono bg-muted px-2 py-1 rounded border">
               {customer.id}
             </span>
           </div>
-
-          <Separator />
-
-          <div className="space-y-1.5 text-sm">
+          <div className="px-4 py-3 space-y-1.5 text-sm">
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
               <span>{customer.address}</span>
@@ -230,8 +230,8 @@ export default function SummaryPage({
               </div>
             )}
             <div className="flex items-center gap-2">
-              <Zap className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span>
+              <Zap className="w-4 h-4 text-primary shrink-0" />
+              <span className="font-medium text-primary/80">
                 {customer.systemType}
                 {customer.systemAge !== undefined &&
                   ` · ${customer.systemAge} yrs old`}
@@ -256,9 +256,10 @@ export default function SummaryPage({
 
         {/* Equipment line items */}
         {estimate.lineItems.length > 0 && (
-          <div className="bg-background rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/50">
-              <h3 className="font-semibold text-sm">Equipment &amp; Parts</h3>
+          <div className="bg-card rounded-xl border overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b bg-primary/5 flex items-center gap-2">
+              <Package className="w-4 h-4 text-primary" />
+              <h3 className="font-semibold text-sm text-primary">Equipment &amp; Parts</h3>
             </div>
             <div className="divide-y">
               {estimate.lineItems.map((item) => (
@@ -285,7 +286,7 @@ export default function SummaryPage({
                 </div>
               ))}
             </div>
-            <div className="px-4 py-3 border-t bg-muted/30 flex justify-between text-sm font-medium">
+            <div className="px-4 py-3 border-t bg-primary/5 flex justify-between text-sm font-semibold text-primary">
               <span>Equipment Subtotal</span>
               <span>{formatCurrency(equipmentTotal)}</span>
             </div>
@@ -294,9 +295,10 @@ export default function SummaryPage({
 
         {/* Labor */}
         {estimate.laborRate && laborRange && (
-          <div className="bg-background rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/50">
-              <h3 className="font-semibold text-sm">Labor</h3>
+          <div className="bg-card rounded-xl border overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b bg-amber-50 border-amber-100 flex items-center gap-2">
+              <HardHat className="w-4 h-4 text-amber-700" />
+              <h3 className="font-semibold text-sm text-amber-900">Labor</h3>
             </div>
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
@@ -327,9 +329,10 @@ export default function SummaryPage({
 
         {/* Notes */}
         {estimate.notes?.trim() && (
-          <div className="bg-background rounded-xl border overflow-hidden">
-            <div className="px-4 py-3 border-b bg-muted/50">
-              <h3 className="font-semibold text-sm">Notes</h3>
+          <div className="bg-card rounded-xl border overflow-hidden shadow-sm">
+            <div className="px-4 py-3 border-b bg-muted/40 flex items-center gap-2">
+              <FileText className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-semibold text-sm text-muted-foreground">Technician Notes</h3>
             </div>
             <div className="px-4 py-3">
               <p className="text-sm whitespace-pre-wrap text-muted-foreground">
@@ -340,9 +343,9 @@ export default function SummaryPage({
         )}
 
         {/* Totals */}
-        <div className="bg-background rounded-xl border overflow-hidden">
-          <div className="px-4 py-3 border-b bg-muted/50">
-            <h3 className="font-semibold text-sm">Estimate Total</h3>
+        <div className="bg-card rounded-xl border border-primary/20 overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b bg-primary/5 flex items-center gap-2">
+            <h3 className="font-semibold text-sm text-primary">Estimate Total</h3>
           </div>
           <div className="px-4 py-3 space-y-2">
             {estimate.lineItems.length > 0 && (
@@ -364,8 +367,8 @@ export default function SummaryPage({
                 No labor selected.
               </p>
             )}
-            <Separator />
-            <div className="flex justify-between font-bold text-lg">
+            <Separator className="bg-primary/10" />
+            <div className="flex justify-between font-bold text-xl text-primary pt-1">
               <span>Grand Total</span>
               <span>
                 {totalRange.min === totalRange.max
@@ -391,13 +394,13 @@ export default function SummaryPage({
             <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-50 border border-green-200 gap-3">
               <div className="flex items-center gap-2 text-green-700 min-w-0">
                 <BookmarkCheck className="w-4 h-4 shrink-0" />
-                <span className="text-sm font-medium truncate">
-                  Auto-saved
+                <span className="text-sm font-semibold truncate">
+                  Estimate saved
                 </span>
               </div>
               <Link
                 href="/estimates"
-                className="text-xs text-green-700 underline underline-offset-2 shrink-0"
+                className="text-xs font-semibold text-green-700 underline underline-offset-2 shrink-0"
               >
                 View all
               </Link>
@@ -405,7 +408,7 @@ export default function SummaryPage({
           ) : (
             <Button
               variant="outline"
-              className="w-full h-11"
+              className="w-full h-11 border-primary/30 text-primary hover:bg-primary/5"
               onClick={handleSave}
               disabled={saveStatus === "saving"}
             >
@@ -460,7 +463,7 @@ export default function SummaryPage({
 
           {/* Print */}
           <Button
-            className="w-full h-12 text-base"
+            className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-sm"
             onClick={() => window.print()}
           >
             <Printer className="w-4 h-4 mr-2" />
@@ -471,7 +474,7 @@ export default function SummaryPage({
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="flex-1 h-11"
+              className="flex-1 h-11 border-border hover:border-primary/30 hover:text-primary"
               onClick={() => router.push(`/estimate/${customerId}`)}
             >
               <ArrowLeft className="w-4 h-4 mr-1.5" />

@@ -268,7 +268,7 @@ export function VoiceNotesField({
            * Styled to match the textarea so the swap is seamless.
            */
           <div
-            className="min-h-[180px] w-full rounded-lg border border-input bg-transparent px-2.5 py-2 text-base md:text-sm overflow-auto whitespace-pre-wrap wrap-break-word pr-14 pb-12"
+            className="min-h-[180px] w-full rounded-lg border border-primary/50 ring-2 ring-primary/15 bg-transparent px-2.5 py-2 text-base md:text-sm overflow-auto whitespace-pre-wrap wrap-break-word pr-14 pb-12"
             aria-live="polite"
             aria-label="Dictation in progress"
           >
@@ -308,7 +308,7 @@ export function VoiceNotesField({
                 ? "bg-muted text-muted-foreground border-border cursor-not-allowed opacity-60"
                 : recording
                   ? "bg-red-500 text-white border-red-500 hover:bg-red-600"
-                  : "bg-background text-foreground border-border hover:bg-accent"
+                  : "bg-primary/10 text-primary border-primary/30 hover:bg-primary/20"
             }`}
         >
           {recording ? (
@@ -325,7 +325,7 @@ export function VoiceNotesField({
         </button>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className={`text-xs ${recording ? "text-primary font-medium" : "text-muted-foreground"}`}>
         {recording
           ? "Listening… speak naturally, then tap the mic again to stop."
           : recognitionSupported

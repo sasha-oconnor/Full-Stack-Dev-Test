@@ -41,7 +41,7 @@ export function EstimateTotals({
   const canProceed = lineItems.length > 0 || laborRate !== null;
 
   return (
-    <div className="border-t shadow-[0_-2px_8px_rgba(0,0,0,0.06)] bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <div className="border-t shadow-[0_-4px_12px_rgba(15,76,129,0.08)] bg-card">
       <div className="max-w-2xl lg:max-w-3xl mx-auto px-4 pt-3 pb-4 space-y-3">
 
         {/* Totals breakdown */}
@@ -71,7 +71,7 @@ export function EstimateTotals({
                 </p>
               </>
             )}
-            <div className="flex justify-between font-bold text-lg pt-1.5 border-t">
+            <div className="flex justify-between font-bold text-lg pt-1.5 border-t border-primary/10 text-primary">
               <span>Total Estimate</span>
               <span>
                 {totalRange.min === totalRange.max
@@ -101,7 +101,7 @@ export function EstimateTotals({
           {!isFirst && (
             <Button
               variant="outline"
-              className="h-12 w-24 shrink-0"
+              className="h-12 w-24 shrink-0 border-primary/30 text-primary hover:bg-primary/5"
               onClick={onBack}
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
@@ -110,7 +110,7 @@ export function EstimateTotals({
           )}
           {isLast ? (
             <Button
-              className="flex-1 h-12 text-base font-semibold"
+              className="flex-1 h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-sm"
               onClick={onViewSummary}
               disabled={disabled || !canProceed}
             >
@@ -119,7 +119,7 @@ export function EstimateTotals({
             </Button>
           ) : (
             <Button
-              className="flex-1 h-12 text-base font-semibold"
+              className="flex-1 h-12 text-base font-semibold bg-primary hover:bg-primary/90 shadow-sm"
               onClick={onNext}
             >
               Next

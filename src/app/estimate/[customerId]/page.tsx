@@ -200,17 +200,17 @@ export default function EstimateBuilderPage({
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-10 bg-background border-b">
+      <header className="sticky top-0 z-10 bg-card border-b shadow-sm">
         <div className="max-w-2xl mx-auto px-4 pt-3 pb-1">
           <div className="flex items-center gap-2">
             <Link href="/">
-              <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2">
+              <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 hover:bg-primary/10 hover:text-primary">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
             </Link>
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate">{customer.name}</p>
-              <p className="text-xs text-muted-foreground truncate">
+              <p className="font-bold text-sm truncate text-foreground">{customer.name}</p>
+              <p className="text-xs text-primary/70 font-medium truncate">
                 {customer.systemType}
                 {customer.systemAge !== undefined
                   ? ` · ${customer.systemAge} yrs old`
@@ -231,34 +231,40 @@ export default function EstimateBuilderPage({
                   label: "Notes",
                   icon: FileText,
                   count: notes.trim() ? 1 : 0,
+                  activeColor: "border-primary text-primary",
+                  dotColor: "bg-primary",
                 },
                 {
                   key: "equipment",
                   label: "Equipment",
                   icon: Package,
                   count: itemCount,
+                  activeColor: "border-primary text-primary",
+                  dotColor: "bg-primary",
                 },
                 {
                   key: "labor",
                   label: "Service",
                   icon: HardHat,
                   count: selectedLabor ? 1 : 0,
+                  activeColor: "border-amber-500 text-amber-700",
+                  dotColor: "bg-amber-500",
                 },
             ] as const
-            ).map(({ key, label, icon: Icon, count }) => (
+            ).map(({ key, label, icon: Icon, count, activeColor, dotColor }) => (
               <button
                 key={key}
                 onClick={() => setActiveSection(key)}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium border-b-2 transition-colors min-h-[44px] ${
                   activeSection === key
-                    ? "border-primary text-primary"
+                    ? activeColor
                     : "border-transparent text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Icon className="w-4 h-4" />
                 {label}
                 {count > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-primary text-primary-foreground text-[10px] flex items-center justify-center font-bold">
+                  <span className={`w-4 h-4 rounded-full ${dotColor} text-white text-[10px] flex items-center justify-center font-bold`}>
                     {count}
                   </span>
                 )}
@@ -277,7 +283,7 @@ export default function EstimateBuilderPage({
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
                     Selected Items
                   </h3>
-                  <div className="rounded-lg border bg-card px-3">
+                  <div className="rounded-lg border border-primary/20 bg-card px-3">
                     {lineItems.map((item) => (
                       <LineItemRow
                         key={item.equipment.id}
@@ -307,11 +313,12 @@ export default function EstimateBuilderPage({
 
           {activeSection === "labor" && (
             <div className="space-y-3">
-              <div>
-                <h3 className="text-sm font-semibold mb-0.5">
+              <div className="rounded-lg bg-amber-50 border border-amber-200/60 px-4 py-3">
+                <h3 className="text-sm font-semibold text-amber-900 mb-0.5 flex items-center gap-1.5">
+                  <HardHat className="w-4 h-4" />
                   Choose Primary Service
                 </h3>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-amber-800/80">
                   Select one service type for this job.{" "}
                   {customer.propertyType === "residential"
                     ? "This customer is residential."
@@ -320,7 +327,7 @@ export default function EstimateBuilderPage({
               </div>
 
               {!selectedLabor && (
-                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2 text-xs text-amber-800">
                   {customer.propertyType === "residential"
                     ? "Tip: For residential customers, Installation (Residential) or Repair (Minor) are common choices."
                     : "Tip: For commercial customers, Installation (Commercial) or Maintenance (Comprehensive) are common choices."}
@@ -338,7 +345,8 @@ export default function EstimateBuilderPage({
           {activeSection === "notes" && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                <h3 className="text-xs font-semibold text-primary/70 uppercase tracking-wide flex items-center gap-1.5">
+                  <FileText className="w-3.5 h-3.5" />
                   Technician Notes
                 </h3>
                 <VoiceNotesField

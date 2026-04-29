@@ -106,21 +106,21 @@ export default function SavedEstimatesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background border-b">
+      <header className="sticky top-0 z-10 bg-card border-b shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center gap-2">
           <Link href="/">
-            <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2">
+            <Button variant="ghost" size="icon" className="h-8 w-8 -ml-2 hover:bg-primary/10 hover:text-primary">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div className="flex-1 min-w-0">
-            <h1 className="font-bold text-base leading-tight">Saved Estimates</h1>
+            <h1 className="font-bold text-base leading-tight text-foreground">Saved Estimates</h1>
             <p className="text-xs text-muted-foreground">
-              {estimates.length} estimate{estimates.length === 1 ? "" : "s"} saved
+              {estimates.length} estimate{estimates.length === 1 ? "" : "s"} on this device
             </p>
           </div>
           <Link href="/">
-            <Button size="sm" className="gap-1.5 h-9">
+            <Button size="sm" className="gap-1.5 h-9 bg-primary hover:bg-primary/90 shadow-sm">
               <PlusCircle className="w-4 h-4" />
               New
             </Button>
@@ -137,7 +137,7 @@ export default function SavedEstimatesPage() {
               placeholder="Search by customer name or estimate ID…"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full h-11 pl-9 pr-9 rounded-lg border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+              className="w-full h-11 pl-9 pr-9 rounded-lg border border-border bg-card text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
             />
             {query && (
               <button
@@ -153,8 +153,8 @@ export default function SavedEstimatesPage() {
 
         {estimates.length === 0 && (
           <div className="text-center py-16 space-y-3">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
-              <BookmarkCheck className="w-6 h-6 text-muted-foreground" />
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto">
+              <BookmarkCheck className="w-6 h-6 text-primary" />
             </div>
             <div className="space-y-1">
               <p className="font-medium text-sm">No saved estimates yet</p>
@@ -186,10 +186,10 @@ export default function SavedEstimatesPage() {
           {filtered.map((est) => (
             <div
               key={est.id}
-              className="bg-background rounded-xl border overflow-hidden"
+              className="bg-card rounded-xl border overflow-hidden shadow-sm hover:border-primary/20 transition-colors"
             >
               {/* Header */}
-              <div className="px-4 py-3 flex items-start justify-between gap-2 border-b bg-muted/30">
+              <div className="px-4 py-3 flex items-start justify-between gap-2 border-b bg-primary/5">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <p className="font-semibold text-sm truncate">
@@ -236,7 +236,7 @@ export default function SavedEstimatesPage() {
               <div className="px-3 py-2 flex items-center gap-2 flex-wrap">
                 <Button
                   size="sm"
-                  className="flex-1 min-w-[72px] h-10"
+                  className="flex-1 min-w-[72px] h-10 bg-primary hover:bg-primary/90"
                   onClick={() => handleOpen(est)}
                 >
                   Open

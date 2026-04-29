@@ -63,7 +63,7 @@ export function EquipmentPicker({
           placeholder="Search by name, brand, or model…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full h-11 pl-9 pr-9 rounded-lg border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+          className="w-full h-11 pl-9 pr-9 rounded-lg border border-border bg-card text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
         />
         {isSearching && (
           <button
@@ -128,23 +128,25 @@ export function EquipmentPicker({
           return (
             <div
               key={item.id}
-              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
-                qty > 0 ? "bg-primary/5 border-primary/20" : "bg-card border-border"
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                qty > 0
+                  ? "bg-primary/5 border-primary/25 shadow-sm"
+                  : "bg-card border-border hover:border-primary/20"
               }`}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium leading-tight">{item.name}</p>
+                <p className="text-sm font-medium leading-tight text-foreground">{item.name}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {item.brand} · {item.modelNumber}
                 </p>
-                <p className="text-sm font-semibold text-primary mt-1">
+                <p className="text-sm font-bold text-primary mt-1">
                   {formatCurrency(item.baseCost)}
                 </p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {qty > 0 && (
-                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold">
                     <Check className="w-3 h-3" />
                     {qty}
                   </div>
@@ -153,7 +155,9 @@ export function EquipmentPicker({
                   size="sm"
                   variant={added ? "secondary" : qty > 0 ? "outline" : "default"}
                   onClick={() => handleAdd(item)}
-                  className="h-10 px-3 min-w-[68px] transition-all"
+                  className={`h-10 px-3 min-w-[68px] transition-all ${
+                    !added && qty === 0 ? "bg-primary hover:bg-primary/90 shadow-sm" : ""
+                  }`}
                 >
                   {added ? (
                     <>

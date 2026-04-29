@@ -8,20 +8,20 @@ export default function CustomerSelectionPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 bg-background border-b">
-        <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-              <Wrench className="w-4 h-4 text-primary-foreground" />
+      <header className="sticky top-0 z-10 bg-card border-b shadow-sm">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm">
+              <Wrench className="w-4.5 h-4.5 text-primary-foreground" />
             </div>
             <div className="flex-1 min-w-0">
-              <h1 className="text-lg font-bold leading-tight">
+              <h1 className="text-base font-bold leading-tight text-foreground">
                 Field Estimate Tool
               </h1>
-              <p className="text-xs text-muted-foreground">Step 1 of 3 — Select a customer to begin</p>
+              <p className="text-xs text-muted-foreground">HVAC · Select a customer to begin</p>
             </div>
             <Link href="/estimates">
-              <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium border border-border hover:bg-muted transition-colors text-muted-foreground">
+              <button className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-primary">
                 <BookmarkCheck className="w-3.5 h-3.5" />
                 Saved
               </button>
