@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/lib/calculations";
 import type { Equipment, EstimateLineItem } from "@/lib/types";
-import { Plus, Check, Search } from "lucide-react";
+import { Plus, Check, Search, X } from "lucide-react";
 
 interface EquipmentPickerProps {
   equipment: Equipment[];
@@ -64,8 +63,17 @@ export function EquipmentPicker({
           placeholder="Search by name, brand, or model…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full h-10 pl-9 pr-3 rounded-lg border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
+          className="w-full h-11 pl-9 pr-9 rounded-lg border bg-background text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors"
         />
+        {isSearching && (
+          <button
+            onClick={() => setSearch("")}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Category chips — hidden while searching */}
@@ -76,7 +84,7 @@ export function EquipmentPicker({
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
+                className={`shrink-0 px-4 py-2 min-h-[36px] rounded-full text-xs font-medium transition-colors whitespace-nowrap ${
                   activeCategory === cat
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -89,12 +97,30 @@ export function EquipmentPicker({
         </div>
       )}
 
+      {/* Search context label */}
+      {isSearching && (
+        <p className="text-xs text-muted-foreground">
+          {filtered.length > 0
+            ? `${filtered.length} result${filtered.length === 1 ? "" : "s"} for "${search}"`
+            : `No results for "${search}"`}
+        </p>
+      )}
+
       {/* Results */}
       <div className="space-y-2">
         {filtered.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            No equipment found.
-          </p>
+          <div className="text-center py-8 space-y-1">
+            <p className="text-sm text-muted-foreground">
+              {isSearching
+                ? "No equipment matched your search."
+                : "No equipment in this category."}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {isSearching
+                ? "Try a different name, brand, or model number."
+                : "Try a different category above."}
+            </p>
+          </div>
         )}
         {filtered.map((item) => {
           const qty = getQuantityInEstimate(item.id);
@@ -102,42 +128,42 @@ export function EquipmentPicker({
           return (
             <div
               key={item.id}
-              className="flex items-center gap-3 p-3 rounded-lg border bg-card"
+              className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                qty > 0 ? "bg-primary/5 border-primary/20" : "bg-card border-border"
+              }`}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium leading-tight">{item.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  <span className="text-xs text-muted-foreground">
-                    {item.brand} · {item.modelNumber}
-                  </span>
-                </div>
-                <span className="text-sm font-semibold text-primary">
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {item.brand} · {item.modelNumber}
+                </p>
+                <p className="text-sm font-semibold text-primary mt-1">
                   {formatCurrency(item.baseCost)}
-                </span>
+                </p>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 {qty > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    <Check className="w-3 h-3 mr-1" />
+                  <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                    <Check className="w-3 h-3" />
                     {qty}
-                  </Badge>
+                  </div>
                 )}
                 <Button
                   size="sm"
                   variant={added ? "secondary" : qty > 0 ? "outline" : "default"}
                   onClick={() => handleAdd(item)}
-                  className="h-10 px-3 min-w-[64px] transition-all"
+                  className="h-10 px-3 min-w-[68px] transition-all"
                 >
                   {added ? (
                     <>
                       <Check className="w-3.5 h-3.5 mr-1 text-green-600" />
-                      <span className="text-green-600">Added!</span>
+                      <span className="text-green-600 font-medium">Added!</span>
                     </>
                   ) : (
                     <>
                       <Plus className="w-3.5 h-3.5 mr-1" />
-                      Add
+                      {qty > 0 ? "Add again" : "Add"}
                     </>
                   )}
                 </Button>
