@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState } from "react";
+import { use, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,45 @@ export default function EstimateBuilderPage({
   const [activeSection, setActiveSection] = useState<
     "equipment" | "labor" | "notes"
   >("equipment");
+
+  // Restore draft or clear stale saved context depending on session mode
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("currentEstimate");
+      const mode = sessionStorage.getItem("currentEstimateMode");
+
+      if (!raw) {
+        // No draft at all — definitely a fresh start, purge any stale saved context
+        sessionStorage.removeItem("currentEstimateId");
+        sessionStorage.setItem("currentEstimateMode", "new");
+        return;
+      }
+
+      const draft = JSON.parse(raw);
+
+      if (mode === "saved" && draft.customerId === customerId) {
+        // Legitimate edit-saved-estimate flow (arrived via /estimates Open or Edit Estimate)
+        // Restore draft and preserve saved context so summary can auto-save
+        if (Array.isArray(draft.lineItems)) setLineItems(draft.lineItems);
+        if (draft.laborRate !== undefined) setSelectedLabor(draft.laborRate);
+        if (typeof draft.notes === "string") setNotes(draft.notes);
+      } else {
+        // Fresh flow or wrong customer — clear stale saved context
+        sessionStorage.removeItem("currentEstimateId");
+        sessionStorage.setItem("currentEstimateMode", "new");
+        // Still restore this customer's last draft (if one exists)
+        if (draft.customerId === customerId) {
+          if (Array.isArray(draft.lineItems)) setLineItems(draft.lineItems);
+          if (draft.laborRate !== undefined) setSelectedLabor(draft.laborRate);
+          if (typeof draft.notes === "string") setNotes(draft.notes);
+        }
+      }
+    } catch {
+      sessionStorage.removeItem("currentEstimateId");
+      sessionStorage.setItem("currentEstimateMode", "new");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (!customer) {
     return (
@@ -227,7 +266,7 @@ export default function EstimateBuilderPage({
                 <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
                   {customer.propertyType === "residential"
                     ? "Tip: For residential customers, Installation (Residential) or Repair (Minor) are common choices."
-                    : "Tip: For commercial customers, Installation (Commercial) or Maintenance (Commercial) are common choices."}
+                    : "Tip: For commercial customers, Installation (Commercial) or Maintenance (Comprehensive) are common choices."}
                 </div>
               )}
 

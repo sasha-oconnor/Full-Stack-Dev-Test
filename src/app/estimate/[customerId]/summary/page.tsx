@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,11 @@ import {
   calcEstimateRange,
   formatLaborLabel,
 } from "@/lib/calculations";
+import {
+  saveEstimate,
+  updateEstimate,
+  getSavedEstimate,
+} from "@/lib/saved-estimates";
 import type { Estimate } from "@/lib/types";
 import {
   ArrowLeft,
@@ -27,7 +32,11 @@ import {
   Phone,
   Calendar,
   Clock,
+  BookmarkCheck,
+  Bookmark,
 } from "lucide-react";
+
+type SaveStatus = "idle" | "saving" | "saved" | "updated";
 
 export default function SummaryPage({
   params,
@@ -38,20 +47,56 @@ export default function SummaryPage({
   const router = useRouter();
   const [estimate, setEstimate] = useState<Estimate | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [savedId, setSavedId] = useState<string | null>(null);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
 
   useEffect(() => {
     const raw = sessionStorage.getItem("currentEstimate");
-    if (raw) {
-      try {
-        setEstimate(JSON.parse(raw));
-      } catch {
-        // ignore parse errors
+    if (!raw) { setLoaded(true); return; }
+    try {
+      const parsed: Estimate = JSON.parse(raw);
+      setEstimate(parsed);
+
+      const mode = sessionStorage.getItem("currentEstimateMode");
+      const existingId = sessionStorage.getItem("currentEstimateId");
+
+      // Only auto-save when this estimate was explicitly opened from the saved list
+      if (mode === "saved" && existingId && getSavedEstimate(existingId)) {
+        const cust = getCustomerById(parsed.customerId);
+        if (cust) {
+          updateEstimate(existingId, parsed, cust.name);
+        }
+        setSavedId(existingId);
+        setSaveStatus("saved");
       }
+      // mode === "new" → show manual Save button, no auto-save
+    } catch {
+      // ignore malformed storage
     }
     setLoaded(true);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const customer = getCustomerById(customerId);
+
+  const handleSave = useCallback(() => {
+    if (!estimate || !customer) return;
+    setSaveStatus("saving");
+
+    if (savedId) {
+      updateEstimate(savedId, estimate, customer.name);
+      setSaveStatus("updated");
+    } else {
+      const record = saveEstimate(estimate, customer.name);
+      setSavedId(record.id);
+      sessionStorage.setItem("currentEstimateId", record.id);
+      sessionStorage.setItem("currentEstimateMode", "saved"); // promote to saved mode
+      setSaveStatus("saved");
+    }
+
+    // Reset status feedback after 2.5s
+    setTimeout(() => setSaveStatus((s) => (s !== "idle" ? "saved" : "idle")), 2500);
+  }, [estimate, customer, savedId]);
 
   if (!loaded) return null;
 
@@ -80,6 +125,7 @@ export default function SummaryPage({
     month: "long",
     day: "numeric",
   });
+
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -303,6 +349,30 @@ export default function SummaryPage({
 
         {/* CTA group */}
         <div className="space-y-3 pb-8 print:hidden">
+          {/* Save / auto-saved indicator */}
+          {savedId ? (
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-green-50 border border-green-200">
+              <div className="flex items-center gap-2 text-green-700">
+                <BookmarkCheck className="w-4 h-4" />
+                <span className="text-sm font-medium">Auto-saved</span>
+              </div>
+              <Link href="/estimates" className="text-xs text-green-700 underline underline-offset-2">
+                View all estimates
+              </Link>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              className="w-full h-11"
+              onClick={handleSave}
+              disabled={saveStatus === "saving"}
+            >
+              <Bookmark className="w-4 h-4 mr-2" />
+              {saveStatus === "saving" ? "Saving…" : "Save Estimate"}
+            </Button>
+          )}
+
+          {/* Print */}
           <Button
             className="w-full h-12 text-base"
             onClick={() => window.print()}
@@ -311,16 +381,24 @@ export default function SummaryPage({
             Print / Share Estimate
           </Button>
 
+          {/* Secondary actions */}
           <div className="flex gap-3">
             <Button
               variant="outline"
               className="flex-1 h-11"
-              onClick={() => router.back()}
+              onClick={() => router.push(`/estimate/${customerId}`)}
             >
               <ArrowLeft className="w-4 h-4 mr-1.5" />
               Edit Estimate
             </Button>
-            <Link href="/" className="flex-1">
+            <Link
+              href="/"
+              className="flex-1"
+              onClick={() => {
+                sessionStorage.removeItem("currentEstimateId");
+                sessionStorage.setItem("currentEstimateMode", "new");
+              }}
+            >
               <Button variant="outline" className="w-full h-11">
                 <PlusCircle className="w-4 h-4 mr-1.5" />
                 New Estimate

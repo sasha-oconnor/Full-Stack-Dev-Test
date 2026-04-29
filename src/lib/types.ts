@@ -37,3 +37,23 @@ export interface Estimate {
   laborRate: LaborRate | null;
   notes: string;
 }
+
+export interface SavedEstimateTotals {
+  equipmentSubtotal: number;
+  laborMin: number | null;
+  laborMax: number | null;
+  totalMin: number;
+  totalMax: number;
+}
+
+export interface SavedEstimate {
+  id: string;
+  customerId: string;
+  customerName: string;
+  createdAt: string;
+  updatedAt: string;
+  lineItems: EstimateLineItem[];
+  laborRate: LaborRate | null;
+  notes: string;
+  totals: SavedEstimateTotals;
+}
