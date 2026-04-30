@@ -20,6 +20,7 @@ import type {
   LaborRate,
 } from "@/lib/types";
 import { ArrowLeft, Package, HardHat, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function EstimateBuilderPage({
   params,
@@ -355,21 +356,29 @@ export default function EstimateBuilderPage({
                   placeholder="Add notes about the job, site conditions, customer requests…"
                 />
               </div>
-
-              <AiAssistPanel
-                customer={customer}
-                notes={notes}
-                selectedLineItems={lineItems}
-                selectedLabor={selectedLabor}
-                laborRates={laborRates}
-                onApplyEquipment={handleApplyEquipmentSuggestion}
-                onApplyLabor={handleApplyLaborSuggestion}
-                onClearLabor={() => setSelectedLabor(null)}
-                onInsertSummaryDraft={handleInsertSummary}
-                onAppendNoteLine={handleAppendNoteLine}
-              />
             </div>
           )}
+
+          {/* Keep mounted while switching tabs so Gemini results & UI state persist */}
+          <div
+            className={cn(
+              activeSection !== "notes" && "hidden",
+              activeSection === "notes" && "mt-4"
+            )}
+          >
+            <AiAssistPanel
+              customer={customer}
+              notes={notes}
+              selectedLineItems={lineItems}
+              selectedLabor={selectedLabor}
+              laborRates={laborRates}
+              onApplyEquipment={handleApplyEquipmentSuggestion}
+              onApplyLabor={handleApplyLaborSuggestion}
+              onClearLabor={() => setSelectedLabor(null)}
+              onInsertSummaryDraft={handleInsertSummary}
+              onAppendNoteLine={handleAppendNoteLine}
+            />
+          </div>
         </div>
       </main>
 
