@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getCustomers } from "@/lib/data";
 import { CustomerSearch } from "@/components/CustomerSearch";
-import { Wrench, BookmarkCheck } from "lucide-react";
+import { BookmarkCheck } from "lucide-react";
 
 export default function CustomerSelectionPage() {
   const customers = getCustomers();
@@ -11,9 +12,14 @@ export default function CustomerSelectionPage() {
       <header className="sticky top-0 z-10 bg-card border-b shadow-sm">
         <div className="max-w-2xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-sm">
-              <Wrench className="w-4.5 h-4.5 text-primary-foreground" />
-            </div>
+            <Image
+              src="/field_estimate_logo.png"
+              alt="Field Estimate Tool"
+              width={54}
+              height={54}
+              className="shrink-0"
+              priority
+            />
             <div className="flex-1 min-w-0">
               <h1 className="text-base font-bold leading-tight text-foreground">
                 Field Estimate Tool
