@@ -232,10 +232,10 @@ export default function SavedEstimatesPage() {
                 )}
               </div>
 
-              <div className="px-3 py-2 flex items-center gap-2 flex-wrap">
+              <div className="px-3 py-2 flex items-center gap-1.5 sm:gap-2 flex-nowrap min-w-0">
                 <Button
                   size="sm"
-                  className="flex-1 min-w-[72px] h-10 bg-primary hover:bg-primary/90"
+                  className="flex-1 min-w-0 max-w-[42%] sm:max-w-none h-10 bg-primary hover:bg-primary/90 shrink"
                   onClick={() => handleOpen(est)}
                 >
                   Open
@@ -243,19 +243,19 @@ export default function SavedEstimatesPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-10 px-3"
+                  className="h-10 w-10 shrink-0 p-0 sm:w-auto sm:px-3"
                   onClick={() => handleCopyShare(est)}
                   title="Copy customer share link"
                 >
                   <LinkIcon className="w-4 h-4" />
                   {copiedToken === est.shareToken && (
-                    <span className="ml-1 text-[11px]">Copied</span>
+                    <span className="ml-1 text-[11px] hidden sm:inline">Copied</span>
                   )}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-10 px-3"
+                  className="h-10 w-10 shrink-0 p-0 sm:w-auto sm:px-3"
                   onClick={() => {
                     const sessionData = {
                       customerId: est.customerId,
@@ -278,26 +278,30 @@ export default function SavedEstimatesPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-10 px-3"
+                  className="h-10 w-10 shrink-0 p-0 sm:w-auto sm:px-3"
                   onClick={() => handleDuplicate(est.id)}
                   title="Duplicate"
                 >
                   <Copy className="w-4 h-4" />
                 </Button>
                 {confirmDeleteId === est.id ? (
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button
                       size="sm"
                       variant="destructive"
-                      className="h-10 px-3 text-xs"
+                      className="h-11 w-11 shrink-0 px-0 sm:h-10 sm:w-auto sm:px-3"
                       onClick={() => handleDelete(est.id)}
+                      aria-label="Confirm delete"
                     >
-                      Delete
+                      <Trash2 className="w-4 h-4" />
+                      <span className="hidden sm:inline sm:ml-1.5 text-xs font-medium">
+                        Delete
+                      </span>
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-10 px-2"
+                      className="h-10 px-2 text-xs sm:px-3"
                       onClick={() => setConfirmDeleteId(null)}
                     >
                       Cancel
@@ -307,9 +311,10 @@ export default function SavedEstimatesPage() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="h-10 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
+                    className="h-11 w-11 shrink-0 p-0 sm:h-10 sm:w-auto sm:px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
                     onClick={() => setConfirmDeleteId(est.id)}
                     title="Delete"
+                    aria-label="Delete estimate"
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
