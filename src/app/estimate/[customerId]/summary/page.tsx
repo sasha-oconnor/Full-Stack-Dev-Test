@@ -78,7 +78,14 @@ export default function SummaryPage({
           const cust = getCustomerById(parsed.customerId);
           if (cust) {
             const updated = updateEstimate(existingId, parsed, cust.name);
-            setSavedRecord(updated ?? existing);
+            if (updated) {
+              setSavedRecord(updated);
+              if (updated.id !== existingId) {
+                sessionStorage.setItem("currentEstimateId", updated.id);
+              }
+            } else {
+              setSavedRecord(existing);
+            }
           } else {
             setSavedRecord(existing);
           }
@@ -99,8 +106,14 @@ export default function SummaryPage({
     setSaveStatus("saving");
 
     if (savedRecord) {
+      const prevId = savedRecord.id;
       const updated = updateEstimate(savedRecord.id, estimate, customer.name);
-      if (updated) setSavedRecord(updated);
+      if (updated) {
+        setSavedRecord(updated);
+        if (updated.id !== prevId) {
+          sessionStorage.setItem("currentEstimateId", updated.id);
+        }
+      }
       setSaveStatus("updated");
     } else {
       const record = saveEstimate(estimate, customer.name);

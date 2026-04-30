@@ -4,6 +4,7 @@ import type {
   SavedEstimateStatus,
   Estimate,
   ApprovalRecord,
+  EstimateLineItem,
 } from "@/lib/types";
 import {
   calcEquipmentTotal,
@@ -100,6 +101,30 @@ function writeAll(estimates: SavedEstimate[]): void {
   }
 }
 
+function lineItemsFingerprint(items: EstimateLineItem[]): string {
+  return JSON.stringify(
+    items.map((li) => ({ id: li.equipment.id, q: li.quantity }))
+  );
+}
+
+/** True when estimate body differs from what was last saved (for invalidating approval). */
+function estimateBodyDiffersFromSaved(
+  estimate: Estimate,
+  saved: SavedEstimate
+): boolean {
+  const a = {
+    lines: lineItemsFingerprint(estimate.lineItems),
+    labor: JSON.stringify(estimate.laborRate),
+    notes: (estimate.notes ?? "").trim(),
+  };
+  const b = {
+    lines: lineItemsFingerprint(saved.lineItems),
+    labor: JSON.stringify(saved.laborRate),
+    notes: (saved.notes ?? "").trim(),
+  };
+  return JSON.stringify(a) !== JSON.stringify(b);
+}
+
 function buildTotals(estimate: Estimate): SavedEstimateTotals {
   const equipmentSubtotal = calcEquipmentTotal(estimate.lineItems);
   const laborRng = estimate.laborRate
@@ -168,6 +193,37 @@ export function updateEstimate(
   if (idx === -1) return null;
   const existing = all[idx];
   const now = new Date().toISOString();
+
+  const hadFinalCustomerDecision =
+    existing.status === "approved" || existing.status === "rejected";
+  const bodyChanged = estimateBodyDiffersFromSaved(estimate, existing);
+  const forkAfterDecision = hadFinalCustomerDecision && bodyChanged;
+
+  // Keep the approved/rejected snapshot in the list; save edited work as a new draft row.
+  if (forkAfterDecision) {
+    const lineageRoot = existing.parentEstimateId ?? existing.id;
+    const record: SavedEstimate = {
+      id: generateId(),
+      customerId: estimate.customerId,
+      customerName,
+      createdAt: now,
+      updatedAt: now,
+      lineItems: estimate.lineItems,
+      laborRate: estimate.laborRate,
+      notes: estimate.notes,
+      totals: buildTotals(estimate),
+      status: "draft",
+      revisionNumber: (existing.revisionNumber ?? 1) + 1,
+      parentEstimateId: lineageRoot,
+      lastActionAt: now,
+      visitPurpose: estimate.visitPurpose ?? existing.visitPurpose,
+      intakeNotes: estimate.intakeNotes ?? existing.intakeNotes,
+      shareToken: generateShareToken(),
+    };
+    writeAll([record, ...all]);
+    return record;
+  }
+
   const updated: SavedEstimate = {
     ...existing,
     customerId: estimate.customerId,
