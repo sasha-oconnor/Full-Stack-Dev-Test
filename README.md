@@ -83,7 +83,7 @@ A **Saved** area lists all stored estimates with **search**, **open** (reloads i
 
 ## What I struggled with the most
 
-I struggled the most with **voice dictation** (browser speech APIs, accuracy, and making dictated punctuation feel natural) and the **AI helper** (prompting Gemini for structured catalog-aligned output, error handling, fallbacks, and keeping the UX smooth when the model or network misbehaves).
+I struggled the most with **voice dictation** (browser speech APIs, accuracy, and making dictated punctuation feel natural) and the **AI helper** (prompting Gemini for structured catalog-aligned output, error handling, fallbacks, and keeping the UX smooth when the model or network misbehaves). I also struggled a lot with the animated list. Sometimes the list would only display a whole number of customers on the screen, making it seem like there was no ability to scroll. I fixed this by making sure that if 30% of a card was on screen, it would also be shown. This makes it clear that a user can scroll. 
 
 ## If I had more time...
 
