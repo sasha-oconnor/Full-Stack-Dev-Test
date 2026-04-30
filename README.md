@@ -1,29 +1,98 @@
 # Field Estimate Tool
 
-## The Problem
+## Getting started
 
-Our HVAC technicians are losing time on every service call.
+1. **Install dependencies**
 
-Right now, when a tech gets to a job site and needs to give the customer an estimate, here's what happens: they flip through a product binder or scroll through a spreadsheet on their phone, look up equipment costs, try to remember the labor rates for different job types, factor in the specifics of the property, and then scribble numbers on a notepad or punch them into a calculator. Sometimes they call the office to double-check pricing. Sometimes they guess and adjust later.
+   ```bash
+   npm install
+   ```
 
-The customer is standing there the whole time.
+2. **Environment variables** (required for AI-assisted features)
 
-A simple repair estimate might take 10-15 minutes. A full system replacement quote can take 30-45 minutes on-site, and that's before the tech has to go back to their truck to write it up in a way the customer can actually read. Some techs text a photo of their handwritten notes to the office and have someone there type it up. Others just wing it and send a "real" estimate later that evening.
+   Copy [`.env.example`](.env.example) to `.env.local` in the project root:
 
-We've got about 40 technicians in the field. If each one does 4-6 estimates a day, that's a lot of wasted time — and a lot of customers standing around waiting. We've heard from customers that the wait makes the whole experience feel less professional, and we've definitely lost jobs because a competitor got a clean estimate out faster.
+   ```bash
+   cp .env.example .env.local
+   ```
 
-## What We Have
+   Open `.env.local` and set your [Google AI Studio](https://aistudio.google.com/apikey) **Gemini API key** and the **model name** you want to use (for example the values shown in `.env.example`):
 
-In the `data/` folder, you'll find some of the information our techs work with:
+   - `GEMINI_API_KEY` - your API key
+   - `GEMINI_MODEL` - the Gemini model id to use (see `.env.example` for a placeholder)
 
-- **equipment.json** — Our catalog of HVAC equipment and parts with pricing
-- **labor_rates.json** — What we charge for different types of work
-- **customers.json** — A sample of customer and property records
+   I would recommend keeping `GEMINI_MODEL=gemini-2.5-flash` because I have not tested any other models.
 
-This is real-ish data pulled from our systems. It's not perfect — some of it was exported from different tools at different times, so it might not all look the same.
+3. **Run the dev server**
 
-## What We're Asking
+   ```bash
+   npm run dev
+   ```
 
-Build something that helps.
+   Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-Fork this repo, build your solution, and include a short write-up explaining your approach — what you built, why you made the choices you did, and what you'd do differently with more time.
+## My approach
+
+I built a **mobile-first** Next.js app for technicians in the field: large tap targets, tab-based navigation on the estimate screen, and layouts that suit a phone even when only using one hand. The same UI scales up cleanly on **desktop and tablet**, so office staff or techs on a laptop get the full experience without a separate codebase.
+
+### Customer selection (home)
+
+Technicians start from a **searchable customer list** backed by `customers.json`. They can filter by **All / Residential / Commercial**, see match counts, and open a **customer card** with property details, system type, and last service. The list is built for long scroll sessions on mobile: a constrained scroll region, and entry animations.
+
+### Building an estimate
+
+After picking a customer, the flow is **Notes → Equipment → Service (labor)**. A **progress indicator** shows where they are in the job. Each section is a **tab** with status dots (e.g. line-item count, whether labor is chosen) so it’s obvious what still needs attention.
+
+- **Notes** - Free-form job notes, plus **voice dictation** via the browser’s **Web Speech API**. Speech is cleaned up with basic **punctuation and capitalization** so “period / comma / new line” style dictation is usable in the field without typing.
+- **Equipment** - Add lines from the equipment catalog with **search and categories**, adjust **quantities**, and remove lines. Selected items are summarized above the picker.
+- **Service** - Pick a **labor rate** from `labor_rates.json` (job type, level, hourly rate, hour ranges). The UI warns if there’s equipment but no labor selected.
+
+While building, the app keeps a **draft in `sessionStorage`** so a refresh or accidental navigation is less painful; opening a saved estimate from the list restores the right context.
+
+### AI assist (Gemini)
+
+On the notes section we added an **AI assist panel** powered by **Google Gemini** (server-side API route; key and model in `.env.local`). The model receives the tech’s notes plus **customer context** (property type, system, etc.) and returns structured suggestions:
+
+- **Equipment recommendations** mapped to our real catalog (with reasons and confidence), **one-tap add** to the estimate.
+- **Labor / service type** suggestions aligned to our rate table, with apply/clear actions.
+- **“Missing information” prompts** when the job description is ambiguous. Simply answer inline and re-run the analysis.
+- A **visit summary draft** you can insert into notes as bullets.
+
+If Gemini is rate-limited, down, or slow, the app **falls back to heuristic matching** from the same catalogs so the tech isn’t stuck.
+
+### Summary, drafts, and sharing
+
+The **summary** page rolls up **equipment subtotal**, **labor min/max hours**, and a **total range**, with customer and property context for review.
+
+Saving writes to **`localStorage`** as a **draft** by default. Each saved estimate gets a **stable share token** and a **copy link** (`/shared/[token]`) you can text or email to the homeowner. **Mark as sent** moves the estimate out of “draft” for your own workflow. 
+
+### Customer-facing shared page
+
+The **public-style shared URL** shows a read-only estimate with branding-friendly layout. The customer can **approve or reject** (with an optional short note). That decision is stored on the **same device/browser** as the tech’s saved estimates (local-only persistence today), and status badges update immediately when they return to the app, so the loop is **draft → share → sent → approved/rejected** with clear states.
+
+Copy the estimate URL and paste it into your browser. You will now have the option to approve or reject the estimate. Once you complete this step, the estimate will automatically update to show: "Approved" or "Rejected".
+
+### Saved estimates hub
+
+A **Saved** area lists all stored estimates with **search**, **open** (reloads into summary), **duplicate**, **delete**, **copy share link**, and **print**-friendly views where applicable, so repeat visits and follow-ups are quick.
+
+### Stack and tradeoffs
+
+**Next.js App Router**, **Tailwind**, **Motion** for lightweight list animation, **Lucide** icons, and **shadcn-style** UI primitives. Persisting estimates in the browser keeps the demo **fast and deployable without a database**.
+
+
+## What I struggled with the most
+
+I struggled the most with **voice dictation** (browser speech APIs, accuracy, and making dictated punctuation feel natural) and the **AI helper** (prompting Gemini for structured catalog-aligned output, error handling, fallbacks, and keeping the UX smooth when the model or network misbehaves).
+
+## If I had more time...
+
+If I had more time, I would add a **full authorization flow** (sign-in, roles for tech vs. customer vs. admin), **version control or a clear change history** for estimates so you could see what changed between revisions, and hook everything up to a **real backend** with a database so share links, approvals, and data survive across devices and browsers—not just `localStorage`.
+
+## Assignment brief (summary)
+
+HVAC field techs lose a lot of time per estimate (paper, spreadsheets, phone-a-friend) while the customer waits, so quotes feel slow and we sometimes lose to faster competitors.
+
+**Data** in `data/`: **equipment.json** (parts & equipment), **labor_rates.json** (rates by job type), **customers.json** (sample customers/properties). Shapes may vary; it’s meant to feel like real exports.
+
+**Ask:** build something that helps, and include a short write-up on your approach.
